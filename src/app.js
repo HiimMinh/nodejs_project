@@ -10,6 +10,10 @@ const app = express()
 app.use(morgan('dev'))
 app.use(helmet())
 app.use(compression())
+app.use(express.json())
+app.use(express.urlencoded({
+    extended: true
+}))
 
 // app.use(morgan('combined'))
 // app.use(morgan('common'))
@@ -26,14 +30,7 @@ countConnect()
 // countConnect()
 
 // init routes
-app.get('/', (req, res, next) => {
-    // const strCompress = 'Hello Fantipjs'
-
-    return res.status(500).json({
-        message: 'Welcome Fantipjs',
-        // metadata: strCompress.repeat(10000)
-    })
-})
+app.use('/', require('./routes'))
 
 // handling error
 

@@ -1,0 +1,13 @@
+
+@url_dev=http://localhost:3055/v1/api/
+
+
+### signUp
+POST {{url_dev}}/shop/signUp
+Content-Type: application/json
+
+{
+    "name": "SHOP TIPS",
+    "email": "shoptopjs@gmail9.com",
+    "password": "abc123"
+}
