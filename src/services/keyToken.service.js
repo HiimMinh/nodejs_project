@@ -6,19 +6,27 @@ class KeyTokenService {
     
     static createKeyToken = async ({
         userId,
-        publicKey
+        publicKey,
+        privateKey,
+        refreshToken
     }) => {
         try {
-            console.log(`KeyToken::publicKeyString::`, publicKey);
+            // level 0
+            // const tokens = await keyTokenModel.create({
+            //     user: userId,
+            //     publicKey,
+            //     privateKey
+            // })
 
-            const publicKeyString = publicKey.toString()
-            console.log(`KeyToken::publicKeyString::`, publicKeyString);
+            // return tokens ? tokens.publicKey : null
 
-            const tokens = await keyTokenModel.create({
-                user: userId,
-                publicKey: publicKeyString
-            })
+            // level xxx
+            const filter = { user: userId}, update = {
+                publicKey, privateKey, refreshTokensUsed: [], refreshToken
+            }, options = {upsert: true, new: true}
 
+            const tokens = await keyTokenModel.findOneAndUpdate(filter, update, options)
+ 
             return tokens ? tokens.publicKey : null
         } catch (error) {
             return error

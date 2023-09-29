@@ -9,6 +9,17 @@ x-api-key: 3abb4a966cd6d799315d767ad3b79be46cebbe5fc3d978b69cc0c5f906eaf5d03dee6
 
 {
     "name": "SHOP TIPS",
-    "email": "shoptopjs@gmail12.com",
+    "email": "SHOPDEV@gmail6.com",
     "password": "abc123"
 }
+
+### login
+POST {{url_dev}}/shop/login
+Content-Type: application/json
+x-api-key: 3abb4a966cd6d799315d767ad3b79be46cebbe5fc3d978b69cc0c5f906eaf5d03dee6a8252a225d60d94f20d0d2c04bfcb5e2df9da33410038157c5b9c85c19b
+
+{
+    "email": "SHOPDEV@gmail6.com",
+    "password": "abc123"
+}
+
