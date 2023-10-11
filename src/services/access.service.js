@@ -1,5 +1,5 @@
 "use strict";
-const keyTokenModel = require('../models/keyToken.model')
+const keyTokenModel = require("../models/keyToken.model");
 const shopModel = require("../models/shop.model");
 const bcrypt = require("bcrypt");
 const crypto = require("crypto");
@@ -24,37 +24,96 @@ const RoleShop = {
 };
 
 class AccessService {
+  static handlerRefreshTokenV2 = async ({ keyStore, user, refreshToken }) => {
+    const { userId, email } = user;
+
+
+    if (keyStore.refreshTokensUsed.includes(refreshToken)) {
+      // delete keyStore
+    console.log(`USERID 1 :::::::::: ${userId}`)
+
+      await KeyTokenService.deleteKeyByUserId( userId ); 
+
+    console.log(`USERID 2 :::::::::: ${userId}`)
+
+      throw new ForbiddenError(" Something wrong happened !! Pls relogin");
+    }
+
+    if (keyStore.refreshToken !== refreshToken)
+      throw new AuthFailureError(" Shop not registered ");
+
+    // check userId
+    const foundShop = await findByEmail({ email });
+    if (!foundShop) throw new AuthFailureError("Shop not registered ");
+
+    // create new key pair
+    const tokens = await createTokenPair(
+      {
+        userId,
+        email,
+      },
+      keyStore.publicKey,
+      keyStore.privateKey
+    );
+
+    // update token
+    await keyTokenModel.findOneAndUpdate({
+      user: userId,
+      $set: {
+        refreshToken: tokens.refreshToken,
+      },
+      $addToSet: {
+        refreshTokensUsed: refreshToken,
+      },
+    });
+
+
+
+    return {
+      user,
+      tokens
+    };
+
+    
+  };
 
   /*
     check this token used
   */
-  static handlerRefreshToken = async ( refreshToken ) => {
-
+  static handlerRefreshToken = async (refreshToken) => {
     // Checking did this token use?
-    const foundToken = await KeyTokenService.findByRefreshTokenUsed( refreshToken)
+    const foundToken = await KeyTokenService.findByRefreshTokenUsed(
+      refreshToken
+    );
 
     // if yes
-    if(foundToken){
+    if (foundToken) {
       // decode check user
-      const { userId, email } = await verifyJWT( refreshToken, foundToken.privateKey)
-      console.log({ userId, email});
+      const { userId, email } = await verifyJWT(
+        refreshToken,
+        foundToken.privateKey
+      );
+      console.log({ userId, email });
 
       // delete keyStore
-      await KeyTokenService.deleteKeyById(userId)
-      throw new ForbiddenError(' Something wrong happened !! Pls relogin')
+      await KeyTokenService.deleteKeyById(userId);
+      throw new ForbiddenError(" Something wrong happened !! Pls relogin");
     }
 
-    // if no 
-    const holderToken = await KeyTokenService.findByRefreshToken(refreshToken )
-    if(!holderToken) throw new AuthFailureError(' Shop not registered ')
+    // if no
+    const holderToken = await KeyTokenService.findByRefreshToken(refreshToken);
+    if (!holderToken) throw new AuthFailureError(" Shop not registered ");
 
     // verifyToken
-    const { userId, email } = await verifyJWT( refreshToken, holderToken.privateKey)
-    console.log('[2]--', {userId, email});
+    const { userId, email } = await verifyJWT(
+      refreshToken,
+      holderToken.privateKey
+    );
+    console.log("[2]--", { userId, email });
 
     // check userId
-    const foundShop = await findByEmail( {email} )
-    if(!foundShop) throw new AuthFailureError('Shop not registered ')
+    const foundShop = await findByEmail({ email });
+    if (!foundShop) throw new AuthFailureError("Shop not registered ");
 
     // create new key pair
     const tokens = await createTokenPair(
@@ -68,14 +127,14 @@ class AccessService {
 
     // update token
     await keyTokenModel.findOneAndUpdate({
-      user:  holderToken.user,
+      user: holderToken.user,
       $set: {
-        refreshToken: tokens.refreshToken
+        refreshToken: tokens.refreshToken,
       },
       $addToSet: {
-        refreshTokenUsed: refreshToken
-      }
-    })
+        refreshTokenUsed: refreshToken,
+      },
+    });
 
     // await holderToken.updateOne({
     //   $set: {
@@ -88,15 +147,15 @@ class AccessService {
 
     return {
       user: { userId, email },
-      tokens
-    }
-  }
+      tokens,
+    };
+  };
 
   static logout = async (keyStore) => {
-    const delKey = await KeyTokenService.removeKeyById(keyStore._id)
-    console.log( {delKey })
-    return delKey
-  }
+    const delKey = await KeyTokenService.removeKeyById(keyStore._id);
+    console.log({ delKey });
+    return delKey;
+  };
 
   /*
     1 - Check email in dbs
@@ -119,20 +178,20 @@ class AccessService {
     // const publicKey = crypto.randomBytes(64).toString("hex");
 
     const { publicKey, privateKey } = crypto.generateKeyPairSync("rsa", {
-        modulusLength: 4096,
-        publicKeyEncoding: {
-          type: 'pkcs1', //pkcs8
-          format: 'pem'
-        },
+      modulusLength: 4096,
+      publicKeyEncoding: {
+        type: "pkcs1", //pkcs8
+        format: "pem",
+      },
 
-        privateKeyEncoding: {
-          type: 'pkcs1',
-          format: 'pem'
-        }
-      });
+      privateKeyEncoding: {
+        type: "pkcs1",
+        format: "pem",
+      },
+    });
 
     //4.
-    const { _id: userId } = foundShop
+    const { _id: userId } = foundShop;
     console.log(`check herrrrrrrrrrrrrrrrr:::::; ${userId}`);
 
     const tokens = await createTokenPair(
@@ -149,13 +208,13 @@ class AccessService {
       userId,
       publicKey,
       privateKey,
-      refreshToken: tokens.refreshToken
-    })
-    console.log('check herrrrrrrrrrrrrrrrr');
+      refreshToken: tokens.refreshToken,
+    });
+    console.log("check herrrrrrrrrrrrrrrrr");
 
     return {
       shop: getInfoData({
-        fields: ['_id', 'name', 'email'],
+        fields: ["_id", "name", "email"],
         object: foundShop,
       }),
       tokens,
@@ -189,14 +248,14 @@ class AccessService {
       const { publicKey, privateKey } = crypto.generateKeyPairSync("rsa", {
         modulusLength: 4096,
         publicKeyEncoding: {
-          type: 'pkcs1', //pkcs8
-          format: 'pem'
+          type: "pkcs1", //pkcs8
+          format: "pem",
         },
 
         privateKeyEncoding: {
-          type: 'pkcs1',
-          format: 'pem'
-        }
+          type: "pkcs1",
+          format: "pem",
+        },
       });
 
       // Public key CryptoGraphy Standards !
